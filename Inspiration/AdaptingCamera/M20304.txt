@@ -1,0 +1,171 @@
+// ----------------------------------------------------------------------------------------------------
+//
+// 	M20304 Seting the spindle speed, runing CW/CCW and reading some VFD and spindle parameters.
+//	This is a Modbus interface macro and is running in a macro loop.
+//
+// When this macro is called it will check the Set Spindle Speed and the Spindle Speed Override DRO
+// and will calculate the matching frequency. This is set in Modbus register which is sent to the VFD.
+//
+// After this step it will check the state of RUN CW/CCW LEDs and will set the necessary VFD commands.
+//
+// Last it will read some VFD parameters and display in UCCNC.
+//
+// ----------------------------------------------------------------------------------------------------
+//
+//	Constants
+//
+ushort RunSpindleCW 		= 129;    	// Rexroth EFC5610 RUN CW command
+ushort RunSpindleCCW 		= 133;    	// Rexroth EFC5610 RUN CCW command
+ushort StopSpindleRun 		= 136;   	// Rexroth EFC5610 STOP command
+
+ushort SSetDRO 			= 869;
+ushort SactDRO 			= 870; 
+ushort SSOverriddenDRO		= 2451; 
+ushort MaxSpindleSpeedDRO	= 178;
+double MaximumRPM 		= 24000;
+
+int OutputVoltage		= 20010;	// VFD and spindle monitoring parameter field numbers
+int OutputCurrent		= 20011;
+int OutputPower			= 20012;
+int DCBusVoltage		= 20013;
+int OutputTorque		= 20014;
+int PowerModuleTemp		= 20015;
+int ActualSpeed			= 20016;
+int SpindleTemp			= 20017;
+int SpeedArrival		= 800;
+
+ushort OutputVoltageDRO		= 20010;
+ushort OutputCurrentDRO		= 20011;
+ushort OutputPowerDRO		= 20012;
+ushort DCBusVoltageDRO		= 20013;
+ushort OutputTorqueDRO		= 20014;
+ushort PowerModuleTempDRO	= 20015;
+ushort ActualSpeedDRO		= 20016;
+ushort SpindleTempDRO		= 20017;
+ushort SpeedArrivalLED		= 800;
+
+ushort SpindleRunReg		= 0;		// Dispayed UCCNC Modbus register list
+ushort VFDFrequencyReg	 	= 1;		
+ushort ActualSpeedReg		= 11;
+ushort OutputVoltageReg		= 20;
+ushort OutputCurrentReg		= 10;
+ushort OutputPowerReg		= 22;
+ushort DCBusVoltageReg		= 23;
+ushort OutputTorqueReg		= 24;
+ushort PowerModuleTempReg 	= 30;
+ushort SpeedArrivalReg		= 40;
+
+
+//
+//	Variables
+//
+string SspeedOverride;
+int IndexOfPercentSign;
+string SSpeedOverride;
+
+double Current;
+double Power_kW;
+double Torque;
+double SSpeedHz;
+
+//
+//	Program starts here
+//
+//-------------- Set spindle speed value firtst ---------------------------------------------------------------
+//
+//
+	MaximumRPM = AS3.Getfielddouble(MaxSpindleSpeedDRO);
+	SSpeedHz = ( AS3.Getfielddouble(SSOverriddenDRO));
+	if (SSpeedHz > MaximumRPM)
+	{
+		SSpeedHz = MaximumRPM;	// Force maximum RPM to prevent exception
+	}
+//
+// Calculate the matching RPM frequency and send the value to Modbus register.
+//
+	exec.SetModbusregister(VFDFrequencyReg, (ushort) Convert.ToUInt16(SSpeedHz / 0.6));  
+//
+//-------------- Send start/stop command for the spindle --------------------------------------------------------
+//
+//	Check the CW and CCW LEDs and convert the state to spindle control commands.
+//	The command is set in the Modbus register which is sent to VFD using the UCCNC Modbus internal handler.
+//
+//	Check CW and CCW LEDs, start or stop the spindle based on LED states.
+//	After exiting this macro the Modbus register is set up for CW, CCW or Stop
+//
+	if ( AS3.GetLED(50) == true )  // If the RUN CW LED is active
+	{
+  		exec.SetModbusregister(SpindleRunReg, RunSpindleCW);	//Turn spindle on in CW rotation if LED is on
+	}
+	else
+
+	if ( AS3.GetLED(51) == true )  // If the RUN CCW LED is active
+	{
+    		exec.SetModbusregister(SpindleRunReg, RunSpindleCCW);	//Turn spindle on in CCW rotation if LED is on
+	}
+	else // CW and CCW LEDs are off, send turn spindle OFF commnad
+	{
+    		exec.SetModbusregister(SpindleRunReg, StopSpindleRun); 	// Send Rexroth EFC5610 STOP command to VFD
+	}
+
+// ----------------------------------------------------------------------------------------------------
+//
+// Reading the VFD parameters via Modbus
+//
+// ----------------------------------------------------------------------------------------------------
+//
+//
+// Get the parameters from the VFD and output to display
+// 
+
+	exec.GetModbusregister(OutputVoltageReg, out OutputVoltageDRO);
+	AS3.Setfield(OutputVoltageDRO, OutputVoltage);
+
+	exec.GetModbusregister(OutputCurrentReg, out OutputCurrentDRO);
+	Current = Convert.ToDouble(OutputCurrentDRO * 0.01);
+	AS3.Setfield(Current, OutputCurrent);
+
+	exec.GetModbusregister(OutputPowerReg, out OutputPowerDRO);
+	Power_kW = Convert.ToDouble(OutputPowerDRO * 0.1);
+	AS3.Setfield(Power_kW, OutputPower);
+
+	exec.GetModbusregister(DCBusVoltageReg, out DCBusVoltageDRO);
+	AS3.Setfield(DCBusVoltageDRO, DCBusVoltage);
+
+	exec.GetModbusregister(OutputTorqueReg, out OutputTorqueDRO);
+	Torque = Convert.ToDouble(OutputTorqueDRO) * 0.1;
+	AS3.Setfield(Torque, OutputTorque);
+
+	exec.GetModbusregister(PowerModuleTempReg, out PowerModuleTempDRO);
+	AS3.Setfield(PowerModuleTempDRO, PowerModuleTemp);
+	exec.GetModbusregister(ActualSpeedReg, out ActualSpeedDRO);
+	AS3.Setfield(ActualSpeedDRO, ActualSpeed);
+	AS3.Setfield(ActualSpeedDRO, SactDRO);
+
+	exec.GetModbusregister(PowerModuleTempReg, out SpindleTempDRO);
+	AS3.Setfield(SpindleTempDRO, SpindleTemp);				// Temorarily set the power module temp here
+
+	exec.GetModbusregister(SpeedArrivalReg, out SpeedArrivalLED);
+	
+	if (SpeedArrivalLED == 1)
+	{
+		AS3.SetLED(true, SpeedArrival);
+	}	
+	else
+	{
+		AS3.SetLED(false, SpeedArrival);
+	
+	}
+
+	
+	if (AS3.Getbuttonstate(144) == true)	//Check if the Reset button is active.
+	{
+		exec.Clroutpin(3, 17);		// Turn off the fan
+		AS3.SetLED(false, 801);		// Turn off the LED
+	}	
+
+
+//
+//------------------------------------------------------------------------------------------------------
+//
+//	End of program

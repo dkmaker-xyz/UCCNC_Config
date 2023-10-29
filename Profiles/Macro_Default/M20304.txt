@@ -1,8 +1,11 @@
-ushort RunSpindleCW 		= 1;    	// RUN CW command
-ushort RunSpindleCCW 		= 2;    	// RUN CCW command
-ushort StopSpindleRun 		= 5;   		// STOP command
+ushort RunSpindleCW = 1; // RUN CW command
+ushort RunSpindleCCW = 2; // RUN CCW command
+ushort StopSpindleRun = 5; // STOP command
 
-ushort SpindleRunReg		= 100;		// Dispayed UCCNC Modbus register list
+int Led_CW = 50; // CW LED
+int Led_CCW = 51; // CCW LED
+
+ushort SpindleRunReg = 100; // Modbus register for spindle control
 
 //
 //-------------- Send start/stop command for the spindle --------------------------------------------------------
@@ -13,17 +16,16 @@ ushort SpindleRunReg		= 100;		// Dispayed UCCNC Modbus register list
 //	Check CW and CCW LEDs, start or stop the spindle based on LED states.
 //	After exiting this macro the Modbus register is set up for CW, CCW or Stop
 //
-	if ( AS3.GetLED(50) == true )  // If the RUN CW LED is active
-	{
-  		exec.SetModbusregister(SpindleRunReg, RunSpindleCW);	//Turn spindle on in CW rotation if LED is on
-	}
-	else
 
-	if ( AS3.GetLED(51) == true )  // If the RUN CCW LED is active
-	{
-    		exec.SetModbusregister(SpindleRunReg, RunSpindleCCW);	//Turn spindle on in CCW rotation if LED is on
-	}
-	else // CW and CCW LEDs are off, send turn spindle OFF commnad
-	{
-    		exec.SetModbusregister(SpindleRunReg, StopSpindleRun); 	// Send Rexroth EFC5610 STOP command to VFD
-	}
+if (AS3.GetLED(Led_CW) == true)  // If the RUN CW LED is active
+{
+	exec.SetModbusregister(SpindleRunReg, RunSpindleCW);    //Turn spindle on in CW rotation if LED is on
+}
+else if (AS3.GetLED(Led_CCW) == true)  // If the RUN CCW LED is active
+{
+	exec.SetModbusregister(SpindleRunReg, RunSpindleCCW);   //Turn spindle on in CCW rotation if LED is on
+}
+else // CW and CCW LEDs are off, send turn spindle OFF commnad
+{
+	exec.SetModbusregister(SpindleRunReg, StopSpindleRun);  // Send STOP command to VFD
+}

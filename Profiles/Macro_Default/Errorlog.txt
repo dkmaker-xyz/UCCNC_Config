@@ -1,0 +1,7 @@
+UCCNC macro compiler error log file
+--------------------------------------
+Last error dated: 10/29/2023 1:09:12 PM
+In macro: M21000
+--------------------------------------
+CS0266 | in line: 19 | error text: Typen 'double' kan ikke konverteres implicit til 'ushort'. Der findes en eksplicit konvertering (mangler der en cast?)
+--------------------------------------

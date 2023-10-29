@@ -1,0 +1,13 @@
+ushort SSOverriddenDRO = 2451; 
+ushort Spindle_Minvelocity = 177;
+ushort Spindle_Maxvelocity = 178;
+ushort VFDFrequencyReg = 101;
+double SSpeedHz;
+double VFDMaxFrequency = 400.0;
+double maxVelocity = AS3.Getfielddouble(Spindle_Maxvelocity);
+double minVelocity = AS3.Getfielddouble(Spindle_Minvelocity);
+//double Multiplier = VFDMaxFrequency / maxVelocity;
+SSpeedHz = ( (VFDMaxFrequency / maxVelocity) * AS3.Getfielddouble(SSOverriddenDRO) );
+ushort SetRegisterValue = (ushort)(SSpeedHz * 100.0);
+MessageBox.Show(SetRegisterValue.ToString());
+exec.SetModbusregister(VFDFrequencyReg, SetRegisterValue); 

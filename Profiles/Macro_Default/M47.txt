@@ -1,0 +1,1 @@
+//M47, this code is executed on M47 after program end and file restart

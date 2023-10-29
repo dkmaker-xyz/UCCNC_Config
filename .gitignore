@@ -1,0 +1,16 @@
+*
+
+!.vscode
+!.vscode/*
+
+!.gitignore
+
+!Profiles
+!Profiles/Default.pro
+!Profiles/Macro_Default
+!Profiles/Macro_Default/*
+
+!Screens
+!Screens/*
+
+!UCCNC.exe.config

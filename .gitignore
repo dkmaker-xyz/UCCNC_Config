@@ -12,6 +12,14 @@
 !Profiles/Macro_Default
 !Profiles/Macro_Default/*
 
+!Flashscreen
+!Flashscreen/BMP
+!Flashscreen/BMP/Default2019
+!Flashscreen/BMP/Default2019/*
+!FlashScreen/SOUND
+!FlashScreen/SOUND/*
+
 !Screens
-!Screens/*
+!Screens/Default2019.*
+
 

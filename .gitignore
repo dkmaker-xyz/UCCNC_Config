@@ -1,9 +1,11 @@
 *
 
+!.gitignore
+!UCCNC.exe.config
+!README.md
+
 !.vscode
 !.vscode/*
-
-!.gitignore
 
 !Profiles
 !Profiles/Default.pro
@@ -13,4 +15,3 @@
 !Screens
 !Screens/*
 
-!UCCNC.exe.config
